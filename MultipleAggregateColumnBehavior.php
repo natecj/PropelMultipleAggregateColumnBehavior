@@ -51,7 +51,6 @@ class MultipleAggregateColumnBehavior extends Behavior
     		if (!$foreignTable->hasBehavior('concrete_inheritance_parent')) {
     			$relationBehavior = new MultipleAggregateColumnRelationBehavior();
     			$relationBehavior->setName('aggregate_column_relation');
-    			$foreignKey = $this->getForeignKey( $x );
     			$relationBehavior->addParameter(array('name' => 'foreign_table', 'value' => $table->getName()));
     			$relationBehavior->addParameter(array('name' => 'update_method', 'value' => 'update' . $this->getColumn( $x )->getPhpName()));
     			$foreignTable->addBehavior($relationBehavior);
@@ -71,63 +70,46 @@ class MultipleAggregateColumnBehavior extends Behavior
     		if (!$foreignTableName = $this->getParameter('foreign_table'.$x)) {
     			throw new InvalidArgumentException(sprintf('You must define a \'foreign_table$x\' parameter for the \'aggregate_column\' behavior in the \'%s\' table', $this->getTable()->getName()));
     		}
-    		$script .= $this->addObjectCompute();
-    		$script .= $this->addObjectUpdate();
+    		$script .= $this->addObjectCompute( $x );
+    		$script .= $this->addObjectUpdate( $x );
 		
         } // end for loop
 		
 		return $script;
 	}
 	
-	protected function addObjectCompute() {
-	
-		$script = '';
-	
-        // Loop through items
-        for( $x = 1; $x <= intval( $this->getParameter('count') ); $x++ ) {
+	protected function addObjectCompute( $x ) {
 
-    		$conditions = array();
-    		$bindings = array();
-    		$database = $this->getTable()->getDatabase();
-    		foreach ($this->getForeignKey( $x )->getColumnObjectsMapping() as $index => $columnReference) {
-    			$conditions[] = $columnReference['local']->getFullyQualifiedName() . ' = :p' . ($index + 1);
-    			$bindings[$index + 1]   = $columnReference['foreign']->getPhpName();
-    		}
-    		$tableName = $database->getTablePrefix() . $this->getParameter('foreign_table'.$x);
-    		if ($database->getPlatform()->supportsSchemas() && $this->getParameter('foreign_schema'.$x)) {
-    			$tableName = $this->getParameter('foreign_schema'.$x).'.'.$tableName;
-    		}
-    		$sql = sprintf('SELECT %s FROM %s WHERE %s',
-    			$this->getParameter('expression'.$x),
-    			$database->getPlatform()->quoteIdentifier($tableName),
-    			implode(' AND ', $conditions)
-    		);
-    		
-    		$script .= $this->renderTemplate('objectCompute', array(
-    			'column'   => $this->getColumn( $x ),
-    			'sql'      => $sql,
-    			'bindings' => $bindings,
-    		));
+		$conditions = array();
+		$bindings = array();
+		$database = $this->getTable()->getDatabase();
+		foreach ($this->getForeignKey( $x )->getColumnObjectsMapping() as $index => $columnReference) {
+			$conditions[] = $columnReference['local']->getFullyQualifiedName() . ' = :p' . ($index + 1);
+			$bindings[$index + 1]   = $columnReference['foreign']->getPhpName();
+		}
+		$tableName = $database->getTablePrefix() . $this->getParameter('foreign_table'.$x);
+		if ($database->getPlatform()->supportsSchemas() && $this->getParameter('foreign_schema'.$x)) {
+			$tableName = $this->getParameter('foreign_schema'.$x).'.'.$tableName;
+		}
+		$sql = sprintf('SELECT %s FROM %s WHERE %s',
+			$this->getParameter('expression'.$x),
+			$database->getPlatform()->quoteIdentifier($tableName),
+			implode(' AND ', $conditions)
+		);
 		
-        } // end for loop
-		
-		return $script;
+		return $this->renderTemplate('objectCompute', array(
+			'column'   => $this->getColumn( $x ),
+			'sql'      => $sql,
+			'bindings' => $bindings,
+		));
+
 	}
 	
-	protected function addObjectUpdate() {
-	
-		$script = '';
-	
-        // Loop through items
-        for( $x = 1; $x <= intval( $this->getParameter('count') ); $x++ ) {
-	
-    		$script .= $this->renderTemplate('objectUpdate', array(
-    			'column'  => $this->getColumn( $x ),
-    		));
-		
-        } // end for loop
-		
-		return $script;
+	protected function addObjectUpdate( $x ) {
+
+		return $this->renderTemplate('objectUpdate', array(
+			'column'  => $this->getColumn( $x ),
+		));
 		
 	}
 	
