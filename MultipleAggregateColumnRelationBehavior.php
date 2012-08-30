@@ -54,7 +54,7 @@ class MultipleAggregateColumnRelationBehavior extends Behavior
 		return $this->renderTemplate('objectUpdateRelated', array(
 			'relationName'     => $relationName,
 			'variableName'     => self::lcfirst($relationName),
-			'updateMethodName' => $this->getParameter('update_method'),
+			'updateMethodName' => $updateMethodName,
 		));
 	}
 	
