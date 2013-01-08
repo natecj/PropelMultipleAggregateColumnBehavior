@@ -3,7 +3,7 @@ PropelMultipleAggregateColumnBehavior
 
 ---
 
-As noted by https://github.com/ulfhermann, this is probably better than using this behavior:
+As noted by [ulfhermann](https://github.com/ulfhermann), this is probably better than using this behavior:
 
     You know that you can just define multiple behaviours with different names but the same PHP class in your build.properties, do you? e.g. in my case
 
